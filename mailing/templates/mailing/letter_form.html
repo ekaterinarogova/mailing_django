@@ -1,0 +1,39 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+  <div class="col-12">
+<form method="post" enctype="multipart/form-data">
+  <div class="row">
+  <div class="col-6">
+    <div class="card">
+      <div class="card-header">
+      <h4 class="card-title">Создать рассылку</h4>
+      </div>
+      <div class="card-body">
+        {% csrf_token %}
+        {{ form.as_p }}
+      </div>
+        <div class="card-footer">
+        <button type="submit" class="btn btn-success">Сохранить</button>
+            </div>
+    </div>
+  </div>
+      <div class="col-6">
+    <div class="card">
+      <div class="card-header">
+      <h4 class="card-title">Клиент</h4>
+      </div>
+      <div class="card-body">
+        {{ formset.management_form}}
+        {% for form in formset.forms %}
+          {{ form.as_p }}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+    </div>
+  </form>
+    </div>
+
+{% endblock %}
