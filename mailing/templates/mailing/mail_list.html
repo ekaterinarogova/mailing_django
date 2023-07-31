@@ -3,15 +3,16 @@
 {% block content %}
     <div class="col-12">
         <a href="{% url 'mailing:create_letter' %}" class="btn btn-primary mb-5">Создать рассылку</a>
+        <a href="{% url 'mailing:create_client' %}" class="btn btn-primary mb-5">Создать клиента</a>
     <div class="row">
     {% for object in object_list %}
         <div class="col-4">
             <div class="card mb-4 box-shadow">
                 <div class="card-header">
-                    <h4 class="card-title">{{ object.theme }}</h4>
+                    <h4 class="card-title">{{ object.message.theme }}</h4>
                 </div>
                 <div class="card-body">
-                    <div class="card-text">{{ object.body|truncatechars:100 }}</div>
+                    <div class="card-text">{{ object.mail_time_from }} - {{ object.mail_time_to}}</div>
                 </div>
                 <div class="card-footer">
                     <a href="{% url 'mailing:view_letter' object.pk %}" class="btn btn-outline-primary">Просмотр</a>
