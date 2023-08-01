@@ -1,14 +1,16 @@
+from smtplib import SMTPException
+
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.mail import send_mail
 from django.forms import inlineformset_factory
-from django.http import request
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.utils.timezone import now
 from django.views.generic import CreateView, UpdateView, ListView, DetailView, DeleteView
+from blog.models import Article
 
 from mailing.forms import MessageForm, ClientForm, MailForm
-from mailing.models import Client, Mail, Message
-from mailing.services import mail_send
+from mailing.models import Client, Mail, Message, Logs
+from mailing.services import mail_send, cache_lists
 
 
 class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -34,7 +36,6 @@ class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         self.object = form.save()
         self.object.mail_status = 'создана'
         self.object.owner = self.request.user
-        self.object.save()
 
         formset = self.get_context_data()['formset']
         if formset.is_valid():
@@ -43,13 +44,18 @@ class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
         if form.is_valid():
             if self.object.mail_time_from <= now() <= self.object.mail_time_to:
-                mail_send(self.object)
-                self.object.mail_status = 'запущена'
-                self.object.save()
+                try:
+                    mail_send(self.object)
+                    self.object.mail_status = 'запущена'
+                    Logs.objects.create_log(self.object, 'отправлена')
+                except SMTPException as e:
+                    Logs.objects.create_log(self.object, 'не отправлена', now(), e.args[0])
+                    return SMTPException("Сообщение не отправлено, попробуем еще раз")
+
             if self.object.mail_time_to <= now():
                 self.object.mail_status = 'завершена'
-                self.object.save()
 
+        self.object.save()
         return super().form_valid(form)
 
 
@@ -58,7 +64,7 @@ class MailListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     permission_required = 'mailing.view_mail'
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        return cache_lists(self, Mail)
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -93,8 +99,9 @@ class MailUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
             formset.save()
 
         if form.is_valid():
-            if self.object.mail_time_from <= now() <= self.object.mail_time_to:
+            if self.object.last_send <= now() <= self.object.mail_time_to:
                 mail_send(self.object)
+                self.object.last_send = now()
                 self.object.mail_status = 'запущена'
                 self.object.save()
 
@@ -105,8 +112,8 @@ class MailDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Mail
     permission_required = 'mailing.view_mail'
 
-    def get_context_data(self, *args, **kwargs):
-        context_data = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
         context_data['title'] = 'Просмотр рассылки'
 
         return context_data
@@ -149,7 +156,7 @@ class ClientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     permission_required = 'mailing.view_client'
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        return cache_lists(self, Client)
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -192,6 +199,32 @@ class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         context_data['title'] = 'Редактирование клиента'
 
         return context_data
+
+
+def index(request):
+    context = {
+        'all_mail': Mail.objects.all().count(),
+        'active_mail': Mail.objects.filter(mail_status='запущена').count(),
+        'all_clients': Client.objects.all().count(),
+        'article_object_list': Article.objects.all().order_by('?')[:3],
+        'title': 'Главная'
+    }
+    return render(request, 'mailing/index.html', context)
+
+
+class LogsListView(ListView):
+    model = Logs
+
+    def get_queryset(self):
+        return super().get_queryset().filter(mail_id=self.kwargs.get('pk'))
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+        context_data['title'] = 'Отчеты проведенных рассылок'
+
+        return context_data
+
+
 
 
 

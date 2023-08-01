@@ -21,5 +21,5 @@ class MailForm(forms.ModelForm):
 
     class Meta:
         model = Mail
-        exclude = ('mail_status', 'owner',)
+        exclude = ('mail_status', 'owner', 'last_send')
         clients = forms.ModelMultipleChoiceField(queryset=Client.objects.all())

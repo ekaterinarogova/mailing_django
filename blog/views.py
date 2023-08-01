@@ -1,11 +1,15 @@
-from django.shortcuts import render
+
 from django.views.generic import ListView, DetailView
 
 from blog.models import Article
+from blog.services import cache_articles
 
 
 class ArticleListView(ListView):
     model = Article
+
+    def get_queryset(self):
+        return cache_articles()
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)

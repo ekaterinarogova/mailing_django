@@ -42,7 +42,9 @@
               </tr>
             </table>
           </div>
-          <div class="card-footer"></div>
+          <div class="card-footer">
+            <a href="{% url 'mailing:list_logs' object.pk %}" class="btn btn-primary">Отчеты об отправке</a>
+          </div>
         </div>
       </div>
     </div>
