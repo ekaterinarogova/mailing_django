@@ -37,8 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 
-    'mailing.apps.MailingConfig'
+    'mailing.apps.MailingConfig',
+    'users.apps.UsersConfig',
+    'blog.apps.BlogConfig'
 ]
 
 MIDDLEWARE = [
@@ -139,13 +142,17 @@ EMAIL_HOST_USER = 'fuckup@oscarbot.ru'
 EMAIL_HOST_PASSWORD = 'AsTSNVv7pun9'
 EMAIL_USE_SSL = True
 
+CRONJOBS = [
+    ('0 * * * *', 'mailing.cron.mail_send_by_time')
+]
 
-# AUTH_USER_MODEL = 'users.User'
-#
-# LOGIN_REDIRECT_URL = '/'
-# LOGOUT_REDIRECT_URL = '/'
-# LOGIN_URL = '/users/login/'
-#
+AUTH_USER_MODEL = 'users.User'
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
+
+
 # CACHE_ENABLED = os.getenv('CACHE_ENABLED') == '1'
 # CACHES = {
 #     'default': {

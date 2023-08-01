@@ -15,11 +15,15 @@
                     <div class="card-text">{{ object.mail_time_from }} - {{ object.mail_time_to}}</div>
                 </div>
                 <div class="card-footer">
-                    <a href="{% url 'mailing:view_letter' object.pk %}" class="btn btn-outline-primary">Просмотр</a>
-                    <a href="{% url 'mailing:update_letter' object.pk %}" class="btn btn-outline-primary">Редактировать
-                    </a>
-                    <a href="{% url 'mailing:delete_letter' object.pk %}" class="btn btn-outline-danger mt-2">Удалить
-                    </a>
+                    {% if perms.mailing.view_mail %}
+                        <a href="{% url 'mailing:view_letter' object.pk %}" class="btn btn-outline-primary">Просмотр</a>
+                    {% endif %}
+                    {% if perms.mailing.change_mail %}
+                        <a href="{% url 'mailing:update_letter' object.pk %}" class="btn btn-outline-primary">Редактировать</a>
+                    {% endif %}
+                    {% if perms.mailing.delete_mail %}
+                        <a href="{% url 'mailing:delete_letter' object.pk %}" class="btn btn-outline-danger">Удалить</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

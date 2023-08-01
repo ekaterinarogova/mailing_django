@@ -14,12 +14,12 @@ class ClientForm(forms.ModelForm):
 
     class Meta:
         model = Client
-        fields = '__all__'
+        exclude = ('owner',)
 
 
 class MailForm(forms.ModelForm):
 
     class Meta:
         model = Mail
-        exclude = ('mail_status', )
+        exclude = ('mail_status', 'owner',)
         clients = forms.ModelMultipleChoiceField(queryset=Client.objects.all())

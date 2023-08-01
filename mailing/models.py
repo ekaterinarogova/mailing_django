@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.db import models
 
 from django.utils.timezone import now
@@ -12,6 +13,7 @@ class Client(models.Model):
     last_name = models.CharField(max_length=50, verbose_name='фамилия')
     email = models.EmailField(verbose_name='email', null=True)
     comments = models.TextField(verbose_name='комментарии', null=True, blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='владелец', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -33,6 +35,7 @@ class Mail(models.Model):
     periodicity = models.CharField(max_length=20, verbose_name='периодичность', choices=PERIODS)
     mail_status = models.CharField(max_length=50, verbose_name='статус отправки')
     clients = models.ManyToManyField(Client, verbose_name='получатели')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='владелец', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"{self.message} - {self.mail_status}"
@@ -40,6 +43,10 @@ class Mail(models.Model):
     class Meta:
         verbose_name = 'настройка'
         verbose_name_plural = 'настройки'
+
+        permissions = [
+            ('set_status', 'Can set mail status')
+        ]
 
 
 class Message(models.Model):

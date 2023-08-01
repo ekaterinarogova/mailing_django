@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.mail import send_mail
 from django.forms import inlineformset_factory
 from django.http import request
@@ -5,16 +6,15 @@ from django.urls import reverse_lazy
 from django.utils.timezone import now
 from django.views.generic import CreateView, UpdateView, ListView, DetailView, DeleteView
 
-from config import settings
-from config.settings import EMAIL_HOST_USER
 from mailing.forms import MessageForm, ClientForm, MailForm
 from mailing.models import Client, Mail, Message
 from mailing.services import mail_send
 
 
-class MailCreateView(CreateView):
+class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Mail
     form_class = MailForm
+    permission_required = 'mailing.add_mail'
     success_url = reverse_lazy('mailing:list_letter')
 
     def get_context_data(self, **kwargs):
@@ -33,6 +33,7 @@ class MailCreateView(CreateView):
     def form_valid(self, form):
         self.object = form.save()
         self.object.mail_status = 'создана'
+        self.object.owner = self.request.user
         self.object.save()
 
         formset = self.get_context_data()['formset']
@@ -41,13 +42,23 @@ class MailCreateView(CreateView):
             formset.save()
 
         if form.is_valid():
-            mail_send(self.object)
+            if self.object.mail_time_from <= now() <= self.object.mail_time_to:
+                mail_send(self.object)
+                self.object.mail_status = 'запущена'
+                self.object.save()
+            if self.object.mail_time_to <= now():
+                self.object.mail_status = 'завершена'
+                self.object.save()
 
         return super().form_valid(form)
 
 
-class MailListView(ListView):
+class MailListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Mail
+    permission_required = 'mailing.view_mail'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -56,9 +67,10 @@ class MailListView(ListView):
         return context_data
 
 
-class MailUpdateView(UpdateView):
+class MailUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Mail
     form_class = MailForm
+    permission_required = 'mailing.change_mail'
     success_url = reverse_lazy('mailing:list_letter')
 
     def get_context_data(self, **kwargs):
@@ -81,13 +93,17 @@ class MailUpdateView(UpdateView):
             formset.save()
 
         if form.is_valid():
-            mail_send(self.object)
+            if self.object.mail_time_from <= now() <= self.object.mail_time_to:
+                mail_send(self.object)
+                self.object.mail_status = 'запущена'
+                self.object.save()
 
         return super().form_valid(form)
 
 
-class MailDetailView(DetailView):
+class MailDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Mail
+    permission_required = 'mailing.view_mail'
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -96,9 +112,10 @@ class MailDetailView(DetailView):
         return context_data
 
 
-class MailDeleteView(DeleteView):
+class MailDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Mail
     success_url = reverse_lazy('mailing:list_letter')
+    permission_required = 'mailing.delete_mail'
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -107,9 +124,10 @@ class MailDeleteView(DeleteView):
         return context_data
 
 
-class ClientCreateView(CreateView):
+class ClientCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Client
     form_class = ClientForm
+    permission_required = 'mailing.create_client'
     success_url = reverse_lazy('mailing:list_clients')
 
     def get_context_data(self, **kwargs):
@@ -118,9 +136,20 @@ class ClientCreateView(CreateView):
 
         return context_data
 
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
 
-class ClientListView(ListView):
+        return super().form_valid(form)
+
+
+class ClientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Client
+    permission_required = 'mailing.view_client'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -129,8 +158,9 @@ class ClientListView(ListView):
         return context_data
 
 
-class ClientDetailView(DetailView):
+class ClientDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Client
+    permission_required = 'mailing.view_client'
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
@@ -139,8 +169,9 @@ class ClientDetailView(DetailView):
         return context_data
 
 
-class ClientDeleteView(DeleteView):
+class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Client
+    permission_required = 'mailing.delete_client'
     success_url = reverse_lazy('mailing:list_clients')
 
     def get_context_data(self, *args, **kwargs):
@@ -150,9 +181,10 @@ class ClientDeleteView(DeleteView):
         return context_data
 
 
-class ClientUpdateView(UpdateView):
+class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Client
     form_class = ClientForm
+    permission_required = 'mailing.change_client'
     success_url = reverse_lazy('mailing:list_clients')
 
     def get_context_data(self, *args, **kwargs):

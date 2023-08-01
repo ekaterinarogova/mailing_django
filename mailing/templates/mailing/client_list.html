@@ -16,9 +16,15 @@
                     <div class="card-text">{{ object.comments|truncatechars:100 }}</div>
                 </div>
                 <div class="card-footer">
-                    <a href="{% url 'mailing:view_client' object.pk %}" class="btn btn-outline-primary">Просмотреть</a>
-                    <a href="{% url 'mailing:update_client' object.pk %}" class="btn btn-outline-primary">Редактировать</a>
-                    <a href="{% url 'mailing:delete_client' object.pk %}" class="btn btn-outline-danger">Удалить</a>
+                    {% if perms.mailing.view_client %}
+                        <a href="{% url 'mailing:view_client' object.pk %}" class="btn btn-outline-primary">Просмотреть</a>
+                    {% endif %}
+                    {% if perms.mailing.change_client %}
+                        <a href="{% url 'mailing:update_client' object.pk %}" class="btn btn-outline-primary">Редактировать</a>
+                    {% endif %}
+                    {% if perms.mailing.delete_client %}
+                        <a href="{% url 'mailing:delete_client' object.pk %}" class="btn btn-outline-danger">Удалить</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
