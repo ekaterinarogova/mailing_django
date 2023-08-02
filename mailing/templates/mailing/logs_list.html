@@ -1,0 +1,21 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+<div class="col-12">
+    <div class="row">
+    {% for object in object_list %}
+        <div class="col-4">
+            <div class="card mb-4 box-shadow">
+                <div class="card-body">
+                    <div class="card-text">{{ object.last_try }} - {{ object.status}}</div>
+                    {% if object.server_answer %}
+                        <div class="card-text">{{ object.server_answer }} </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    <a href="{% url 'mailing:list_letter' %}" class="btn btn-warning mt-5">Назад к рассылкам</a>
+</div>
+{% endblock %}

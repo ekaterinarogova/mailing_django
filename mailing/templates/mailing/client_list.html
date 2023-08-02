@@ -1,0 +1,34 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+    <div class="col-12">
+        <a href="{% url 'mailing:create_letter' %}" class="btn btn-primary mb-5">Создать рассылку</a>
+        <a href="{% url 'mailing:create_client' %}" class="btn btn-primary mb-5">Создать клиента</a>
+    <div class="row">
+    {% for object in object_list %}
+        <div class="col-4">
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    <h4 class="card-title">{{ object.first_name|title }} {{ object.last_name|title}}</h4>
+                    <h6 class="card-title">{{ object.email }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="card-text">{{ object.comments|truncatechars:100 }}</div>
+                </div>
+                <div class="card-footer">
+                    {% if perms.mailing.view_client %}
+                        <a href="{% url 'mailing:view_client' object.pk %}" class="btn btn-outline-primary">Просмотреть</a>
+                    {% endif %}
+                    {% if perms.mailing.change_client %}
+                        <a href="{% url 'mailing:update_client' object.pk %}" class="btn btn-outline-primary">Редактировать</a>
+                    {% endif %}
+                    {% if perms.mailing.delete_client %}
+                        <a href="{% url 'mailing:delete_client' object.pk %}" class="btn btn-outline-danger">Удалить</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    </div>
+{% endblock %}

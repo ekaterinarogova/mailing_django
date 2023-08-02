@@ -1,0 +1,54 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+  <div class="col-12">
+    <div class="row">
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Pассылкa </h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <tr>
+                <td>Сообщение:</td>
+                <td>{{object.message.body}}</td>
+              </tr>
+              <tr>
+                <td>Время начала рассылки:</td>
+                <td>{{ object.mail_time_from }}</td>
+              </tr>
+              <tr>
+                <td>Время окончания рассылки:</td>
+                <td>{{ object.mail_time_to }}</td>
+              </tr>
+              <tr>
+                <td>Периодичность:</td>
+                <td>{{ object.periodicity }}</td>
+              </tr>
+              <tr>
+                <td>Статус:</td>
+                <td>{{object.mail_status}}</td>
+              </tr>
+              <tr>
+                <td>Клиенты: </td>
+                  {% for client in object.clients.all %}
+                  <tr>
+                    <td>{{client.first_name}} {{client.last_name}}</td>
+                    <td>{{client.email}}</td>
+                  <tr>
+                  {% endfor %}
+              </tr>
+            </table>
+          </div>
+          <div class="card-footer">
+            <a href="{% url 'mailing:list_logs' object.pk %}" class="btn btn-primary">Отчеты об отправке</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'mailing:list_letter' %}" class="btn btn-warning mt-5">Назад к рассылкам</a>
+  </div>
+
+{% endblock %}

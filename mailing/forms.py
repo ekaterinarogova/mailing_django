@@ -1,12 +1,12 @@
 from django import forms
 
-from mailing.models import Letter, Client
+from mailing.models import Mail, Client, Message
 
 
-class LetterForm(forms.ModelForm):
+class MessageForm(forms.ModelForm):
 
     class Meta:
-        model = Letter
+        model = Message
         fields = ('theme', 'body',)
 
 
@@ -14,5 +14,12 @@ class ClientForm(forms.ModelForm):
 
     class Meta:
         model = Client
-        fields = '__all__'
+        exclude = ('owner',)
 
+
+class MailForm(forms.ModelForm):
+
+    class Meta:
+        model = Mail
+        exclude = ('mail_status', 'owner', 'last_send')
+        clients = forms.ModelMultipleChoiceField(queryset=Client.objects.all())

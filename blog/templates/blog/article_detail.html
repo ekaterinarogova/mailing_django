@@ -1,0 +1,24 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+
+{% block content %}
+
+<div class="col-6 text-center">
+    <div class="card" style="width: 25rem;">
+        <div class="card-body">
+            <p class="card-text">{{object.content}}</p>
+        </div>
+        <div class="card-footer">
+            <p> Просмотров {{ object.views }}</p>
+            <p> Дата публикации {{object.published_date}}</p>
+        </div>
+    </div>
+</div>
+<div class="col-6">
+    <div class="card" style="width: 25rem;">
+        <img src="{{object.image|my_path}}" class="card-img" alt="{{object.image|my_path}}">
+    </div>
+</div>
+<a href="{% url 'blog:list_article' %}" class="btn btn-warning mt-5">Назад к рассылкам</a>
+
+{% endblock %}
