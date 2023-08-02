@@ -5,6 +5,10 @@ from blog.models import Article
 
 
 def cache_articles():
+    """
+    Кеширует список статей
+    :return: список статей
+    """
     if settings.CACHE_ENABLED:
         key = 'article_list'
         article_list = cache.get(key)

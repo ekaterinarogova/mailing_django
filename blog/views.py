@@ -6,6 +6,9 @@ from blog.services import cache_articles
 
 
 class ArticleListView(ListView):
+    """
+        Представления просмотра списка статей в блоге
+    """
     model = Article
 
     def get_queryset(self):
@@ -19,11 +22,14 @@ class ArticleListView(ListView):
 
 
 class ArticleDetailView(DetailView):
+    """
+        Представления просмотра одной статьи
+    """
     model = Article
 
     def get_object(self, queryset=None):
         self.object = super().get_object(queryset)
-        self.object.views += 1
+        self.object.views += 1  # счетчик просмотра статьи
         self.object.save()
 
         return self.object

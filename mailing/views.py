@@ -14,6 +14,7 @@ from mailing.services import mail_send, cache_lists
 
 
 class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Представление создания рассылки"""
     model = Mail
     form_class = MailForm
     permission_required = 'mailing.add_mail'
@@ -43,14 +44,10 @@ class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
             formset.save()
 
         if form.is_valid():
+            # отправляет email если текущее время больше времени начала и меньше времени окончания
             if self.object.mail_time_from <= now() <= self.object.mail_time_to:
-                try:
-                    mail_send(self.object)
-                    self.object.mail_status = 'запущена'
-                    Logs.objects.create_log(self.object, 'отправлена')
-                except SMTPException as e:
-                    Logs.objects.create_log(self.object, 'не отправлена', now(), e.args[0])
-                    return SMTPException("Сообщение не отправлено, попробуем еще раз")
+                mail_send(self.object)
+                self.object.mail_status = 'запущена'
 
             if self.object.mail_time_to <= now():
                 self.object.mail_status = 'завершена'
@@ -60,6 +57,9 @@ class MailCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class MailListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    Представление списка рассылок
+    """
     model = Mail
     permission_required = 'mailing.view_mail'
 
@@ -74,6 +74,9 @@ class MailListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
 
 class MailUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """
+    Представление редактирования рассылки
+    """
     model = Mail
     form_class = MailForm
     permission_required = 'mailing.change_mail'
@@ -98,17 +101,13 @@ class MailUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
             formset.instance = self.object
             formset.save()
 
-        if form.is_valid():
-            if self.object.last_send <= now() <= self.object.mail_time_to:
-                mail_send(self.object)
-                self.object.last_send = now()
-                self.object.mail_status = 'запущена'
-                self.object.save()
-
         return super().form_valid(form)
 
 
 class MailDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    """
+    Представление просмотра одной рассылки
+    """
     model = Mail
     permission_required = 'mailing.view_mail'
 
@@ -120,6 +119,9 @@ class MailDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
 
 
 class MailDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """
+    Представление удаления рассылки
+    """
     model = Mail
     success_url = reverse_lazy('mailing:list_letter')
     permission_required = 'mailing.delete_mail'
@@ -132,6 +134,9 @@ class MailDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 
 class ClientCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """
+    Представление создания клиента
+    """
     model = Client
     form_class = ClientForm
     permission_required = 'mailing.create_client'
@@ -152,6 +157,9 @@ class ClientCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class ClientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    Представления просмотра списка клиентов для каждого пользователя
+    """
     model = Client
     permission_required = 'mailing.view_client'
 
@@ -166,6 +174,9 @@ class ClientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
 
 class ClientDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    """
+        Представления просмотра одного клиента
+    """
     model = Client
     permission_required = 'mailing.view_client'
 
@@ -177,6 +188,9 @@ class ClientDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
 
 
 class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """
+        Представления удаления клиента
+    """
     model = Client
     permission_required = 'mailing.delete_client'
     success_url = reverse_lazy('mailing:list_clients')
@@ -189,6 +203,9 @@ class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 
 class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """
+        Представления редактирования клиента
+    """
     model = Client
     form_class = ClientForm
     permission_required = 'mailing.change_client'
@@ -202,6 +219,9 @@ class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
 
 def index(request):
+    """
+    Функция отображения главной страницы
+    """
     context = {
         'all_mail': Mail.objects.all().count(),
         'active_mail': Mail.objects.filter(mail_status='запущена').count(),
@@ -213,6 +233,9 @@ def index(request):
 
 
 class LogsListView(ListView):
+    """
+        Представления просмотра списка отчетов об отправке для каждой рассылки
+    """
     model = Logs
 
     def get_queryset(self):
